@@ -27,11 +27,11 @@ During my research I will be combining the datasets from the FRED, NIH (Alcohol 
 
 2. Explain in a few sentences why you selected this project, and if you learned what you
 had hoped to learn by doing this project (from your proposal). (4 points)  
-Upon recently learning about the history of Prohibition and reading about the detrimental effects that alcohol has on an individual, especially in the midst of a pandemic, I was curious to learn if there was any trend in alcohol consumption during the COVID-19 pandemic and whether a similar trend was seen in the previous (Influenza) pandemic.  
+Upon recently learning about the history of Prohibition and reading about the detrimental effects that alcohol has on an individual, especially in the midst of a pandemic, I was curious to learn if there was any trend in alcohol consumption during the COVID-19 pandemic and whether a similar trend was seen in the previous (Influenza) pandemic. According to my analysis, alcohol consumption per capita is bound to be above the levels seen in the early 1900's (before the Prohibition) by the end of the next decade. The Prohibition helped decrease alcohol use by about 60% -- if another legislation were to be enforced, ceteris paribus, current alcohol consumption per capita levels could be controlled to 1.14 from the predicted 2.84.  
 
 3. Describe the two major class themes selected (any concept from any lecture is fair
 game!), why you selected them, and how they are applied in the project. (5 points)  
-I used advanced data structures and using tidyverse in R to analyze my datasets.  
+I used advanced data structures like vectors and tidyverse in R to analyze and clean my datasets.  
 
 4. What you would do differently if you were to have an opportunity to redo this project and
 why. (4 points)  
