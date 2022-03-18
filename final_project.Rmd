@@ -1,0 +1,275 @@
+---
+title             : "Are We Due for Another Prohibition?"
+shorttitle        : "Are we due for another Prohibition?"
+
+author: 
+  - name          : "Oishee Chakrabarti"
+    affiliation   : "1"
+    corresponding : no    # Define only one corresponding author
+    email         : "chakra@uchicago.edu"
+    role:         # Contributorship roles (e.g., CRediT, https://casrai.org/credit/)
+      - Conceptualization
+      - Writing - Original Draft Preparation
+      - Writing - Review & Editing
+
+affiliation:
+  - id            : "1"
+    institution   : "University of Chicago"
+
+abstract: |
+  Prohibition in the United States was a constitutional ban on the production, importation, transportation, and sale of alcoholic beverages from 1920 to 1933, across the nation. The constitutional ban was enforced due to an alarming rise in the faith of alcohol and its benefits against influenza. Although the average alcohol consumption every year fell just before the Prohibition, consumption rebounded to pre-Prohibition levels within ten years of being repealed. With the use of data on retail sales of alcoholic beverages, this report aims to determine whether the United States is due for another "Prohibition." With the dawn of a new pandemic (from 2020 to 2022) I hypothesize that alcohol consumption has reached, and possibly exceeded, the consumption levels recorded during the Influenza pandemic (1918-19), calling for a new and revised legislation to manage consumption levels.
+  
+  <!-- https://tinyurl.com/ybremelq -->
+  
+keywords          : "alcohol, consumption, COVID-19, Influenza, legislation, pandemic, Prohibition, retail sales"
+wordcount         : "1551"
+
+bibliography      : ["r-references.bib"]
+
+floatsintext      : no
+figurelist        : yes
+tablelist         : yes
+footnotelist      : no
+linenumbers       : yes
+mask              : no
+draft             : no
+numbersections    : yes
+
+documentclass     : "apa6"
+classoption       : "man"
+output            : papaja::apa6_pdf
+---
+
+```{r setup, include = FALSE}
+library("papaja")
+r_refs("r-references.bib")
+
+# libraries necessary for analysis
+library(dplyr)
+library(ggplot2)
+library(jtools)
+library(readxl)
+library(scales)
+library(tidyverse)
+library(extrafont)
+library(randomForest)
+require(caTools)
+library(data.table)
+library(janitor)
+library(forecast)
+library(knitr)
+library(broom)
+library(stargazer)
+library(xtable)
+```
+
+```{r analysis-preferences}
+# seed for random number generation
+set.seed(42)
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+```{r read-in-data1}
+setwd("~/Documents/from_data_to_manuscript_in_r/maps_30550/data")
+# load datasets
+per_capita_ethanol <- read_csv("data-mjDxu.csv")
+retail_sales_bwls <- read_csv("retail_sales_beer_wine_and_liquor_stores.csv")
+retail_sales_pandemic <- read_csv("fredgraph.csv")
+```
+
+```{r data-preprocessing1}
+# rename columns
+retail_sales_pandemic <- retail_sales_pandemic %>% 
+  rename(grocery = MRTSSM4451USS_PCH,
+         alcohol = MRTSSM4453USS_PCH,
+         pharmaceuticals = MRTSSM44611USS_PCH,
+         mens_clothing = MRTSSM44811USS_PCH,
+         sporting_goods = MRTSSM451USS_PCH,
+         warehouse_clubs = MRTSSM45291USS_PCH,
+         electronics = MRTSSM4541USS_PCH)
+
+# set observation_date column to date format
+retail_sales_pandemic$observation_date <- as.Date(retail_sales_pandemic$DATE)
+```
+
+```{r initial-plot, fig.cap = "Retail sales of alcohol, groceries, and pharmaceuticals from January 2019 to June 2020"}
+# figure 1 supporting the reasoning behind my hypothesis
+figure1 <- ggplot() +
+  geom_line(data = retail_sales_pandemic, aes(x = observation_date, y = alcohol, color = "Alcohol"), size = 0.5) +
+  geom_line(data = retail_sales_pandemic, aes(x = observation_date, y = grocery, color = "Grocery"), size = 0.2) +
+  geom_line(data = retail_sales_pandemic, aes(x = observation_date, y = pharmaceuticals, color = "Pharmaceuticals"), size = 0.2) +
+  ggtitle("Retail Sales During the COVID Pandemic (2019 - 2020)") + 
+  xlab('Date') +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "3 months") +
+  ylab('Percent Change')
+
+figure1 <- figure1 + 
+  scale_color_manual(name = "Departments", values = c("Alcohol" = "lightpink2", "Grocery" = "darkseagreen4", "Pharmaceuticals" = "lightcyan3"))
+
+figure1 + theme_bw() + theme(legend.position = "bottom")
+```
+
+```{r correlation}
+cor_alc_groceries <- cor.test(retail_sales_pandemic$grocery, retail_sales_pandemic$alcohol, method = "pearson")
+
+# subset dataset to have a correlation table
+cor_retail_sales_df <- select(retail_sales_pandemic, c(grocery,
+                                                       alcohol,
+                                                       pharmaceuticals,
+                                                       sporting_goods,
+                                                       electronics))
+
+cor_retail_sales <- round(cor(cor_retail_sales_df), 2)
+
+# hide upper triangle
+upper <- cor_retail_sales
+upper[upper.tri(cor_retail_sales)]<-""
+upper<-as.data.frame(upper)
+knitr::kable(upper, align = "cccc", 
+             caption = "Correlation (Coefficients) between Grocery, Alcohol, Pharmaceuticals', Sporting Goods', and  Electronics' Retail Sales", 
+             "simple")
+```
+
+```{r data-preprocessing2}
+# clean the dataframe
+per_capita_ethanol[per_capita_ethanol == "null"] <- NA
+per_capita_ethanol <- per_capita_ethanol %>% na.omit()
+per_capita_ethanol$Beer <- as.numeric(per_capita_ethanol$Beer)
+per_capita_ethanol$Wine <- as.numeric(per_capita_ethanol$Wine)
+per_capita_ethanol$Spirits <- as.numeric(per_capita_ethanol$Spirits)
+```
+
+```{r second-plot, fig.cap = "Alcohol Sales per Capita"}
+# second plot - all alc sales per capita vs year
+alc_sales_per_capita <- ggplot() +
+  geom_line(data = per_capita_ethanol, aes(x = Year, y = Beer, color = "Beer")) + 
+  geom_line(data = per_capita_ethanol, aes(x = Year, y = Wine, color = "Wine")) + 
+  geom_line(data = per_capita_ethanol, aes(x = Year, y = Spirits, color = "Spirits")) +
+  theme_bw() +
+  ggtitle("Alcohol Sales per Capita") +
+  ylab("Beer, Wine, and Spirits' Sales per Capita")
+
+alc_sales_per_capita <- alc_sales_per_capita + 
+  scale_color_manual(name = "Alcoholic Beverages Purchased", values = c("Beer" = "goldenrod", "Wine" = "peachpuff3", "Spirits" = "salmon3"))
+
+alc_sales_per_capita + theme(legend.position = "bottom")
+```
+
+```{r predictions}
+# set up dataset for predictions
+new_df <- data.table(
+  Year = c(2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040),
+  Beer = c(NA),
+  Wine = c(NA),
+  Spirits = c(NA)
+)
+
+new_df$Beer <- as.double(new_df$Beer)
+new_df$Wine <- as.double(new_df$Wine)
+new_df$Spirits <- as.double(new_df$Spirits)
+
+colnames(new_df) <- colnames(per_capita_ethanol)
+
+prediction_df <- rbind(per_capita_ethanol, new_df)
+
+prediction_df <- prediction_df %>% filter(Year >= 1995)
+
+# wine prediction
+linear_model1 <- lm(Wine ~ Year, data = prediction_df)
+
+prediction_df$wine_predict <- predict(linear_model1, newdata = prediction_df)
+
+# spirits prediction
+linear_model2 <- lm(Spirits ~ Year, data = prediction_df)
+
+prediction_df$spirits_predict <- predict(linear_model2, newdata = prediction_df)
+
+# beer prediction
+linear_model3 <- lm(Beer ~ Year, data = per_capita_ethanol)
+
+prediction_df$beer_predict <- predict(linear_model3, newdata = prediction_df)
+
+# data preprocessing for plot
+prediction_df$Year <- as.Date(as.character(prediction_df$Year), format = "%Y")
+per_capita_ethanol$Year <- as.Date(as.character(per_capita_ethanol$Year), format = "%Y")
+```
+
+```{r prediction-plot, fig.cap = "Actual and Predicted Alcohol Sales per Capita"}
+prediction_plot <- ggplot() +
+  geom_line(data = per_capita_ethanol, aes(x = Year, y = Beer, color = "Actual Beer Consumption")) + 
+  geom_line(data = per_capita_ethanol, aes(x = Year, y = Wine, color = "Actual Wine Consumption")) + 
+  geom_line(data = per_capita_ethanol, aes(x = Year, y = Spirits, color = "Actual Spirits' Consumption")) + 
+  theme_bw() +
+  ggtitle("Predicted Alcohol Sales per Capita") +
+  ylab("Beer, Wine, and Spirits' Sales per Capita")
+
+prediction_plot <- prediction_plot + 
+  geom_line(data = prediction_df, aes(x = Year, y = beer_predict, color = "Predicted Beer Consumption"), linetype = "dashed") +
+  geom_line(data = prediction_df, aes(x = Year, y = wine_predict, color = "Predicted Wine Consumption"), linetype = "dashed") +
+  geom_line(data = prediction_df, aes(x = Year, y = spirits_predict, color = "Predicted Spirits' Consumption"), linetype = "dashed")
+
+prediction_plot <- prediction_plot + 
+  scale_color_manual(name = "Types of Alcohol Consumed", 
+                     values = c("Actual Beer Consumption" = "goldenrod", 
+                                "Actual Wine Consumption" = "peachpuff3", 
+                                "Actual Spirits' Consumption" = "salmon3",
+                                "Predicted Beer Consumption" = "goldenrod2",
+                                "Predicted Wine Consumption" = "peachpuff",
+                                "Predicted Spirits' Consumption" = "salmon2"))
+
+prediction_plot + scale_x_date(limits = as.Date(c("1900-03-14", "2040-03-14"))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "20 years")
+  
+```
+
+```{r pred-table}
+prediction_table1 <- prediction_df
+
+actual_table1 <- prediction_table1 %>% select(c(Year, Beer, Wine, Spirits))
+prediction_table1 <- prediction_table1 %>% select(c(Year, beer_predict, wine_predict, spirits_predict))
+
+colnames(prediction_table1) <- c("Year", "Beer", "Wine", "Spirits")
+
+prediction_table1 <- prediction_table1 %>% filter(`Year` >= 2017)
+
+prediction_table <- rbind(actual_table1, prediction_table1)
+
+prediction_table <- na.omit(prediction_table)
+
+prediction_table$Year <- format(prediction_table$Year, format = "%Y")
+
+# only present the predicted values after 2022 
+table1 <- knitr::kable(prediction_table[50:68, ], align = "cccc", 
+                       caption = "Liquor Sales per Capita Predictions", 
+                       "simple")
+
+table1
+```
+
+# Introduction
+On March 22, 1933, President Roosevelt authorized the sale of beer and wine -- after the 13 year hiatus during which any sale of alcohol was deemed illegal. An idea conceived by Wayne Wheeler, which stemmed the ratification of the 18th Amendment, lead to a 60% decrease in per capita alcohol consumption. While Wheeler's incentive to promote a Prohibition amendment was personal (due an accident caused by an intoxicated assistant), his efforts helped the nation stay away from the reliance on liquor to be a form of medical treatment for the pathogen that had caused the pandemic. With recent literature shedding light on the detrimental effects that alcohol can have in relation to the respiratory virus of SARS-CoV-2 (@calina2021covid) and the advocacy for monitoring alcohol consumption levels during and after the COVID-19 pandemic (@rehm2020alcohol), the data analysis and predictions conducted in this report bring actual and forecasted numbers to help understand the implications of legislation on alcohol consumption.      
+
+# Methods
+In an attempt to analyze trends in alcohol consumption, this report turns to datasets provided by the Federal Reserve Economic Data [@fred_2022; @fred_blog] as well as the National Institutes of Health that contain observations of retail sales, per capita sale levels, and other changes over the last century to draw conclusions and support the hypothesis of having increased alcohol consumption rates, during the most recent pandemic, thereby calling for some form of prohibitive legislation. In an effort to understand the implications of alcohol on consumers' lives, this report equates per capita sale of alcohol to per capita consumption. With the use of R packages including dplyr, tidyverse, and ggplot2 this report looks to measure recent trends in consumption of liquor over the past century. This report also tests the significance of correlations between alcohol sales and that of groceries, pharmaceuticals, sports wear, and electronics. Lastly, with this analyis, the report forecasts the numbers for alcohol consumption into the next decade until 2040. These values will help understand the potential that any legislation can hold, to manage the current levels of consumption.
+
+# Results
+With the news of a pandemic and a national emergency, American households turned to their local grocery stores and pharmacies to stock up on the necessities -- namely food and medicine -- but also turned to liquor stores. While the percentage change (from the previous month) in retail sales for groceries reached a peak of 28.7%, the percentage change in retail sales for alcohol surpassed that of pharmaceuticals approximately 5% (ref. Figure \ \@ref(fig:initial-plot)). While the similar trends in groceries and pharmaceuticals can be explained by a panicked demand to stock up on essentials, in apprehension of the national emergency being extended as well as the risk of infection increasing exponentially, the trend in alcohol sales [@rehm2020alcohol] implies that consumers considered alcohol to be an “essential” as well -- echoing a sentiment shared during the 1918 pandemic. 
+Running a Pearson's product moment correlation test (that is, a measure of the strength of a linear association between two variables) between grocery sales and alcohol sales sheds light on any correlation between the two variables (ref. Table \ \@ref(tab:correlation)). At a 95% confidence level, the two variables have a correlation coefficient of 0.91 with a p-value of 0.0000001164 (i.e., p < 0.05), implying the correlation between grocery sales and alcohol sales is significant. The significantly strong relationship between the two variables could lead to high spikes in alcohol consumption in times of panic-- especially in times when consumers turn to grocery stores and begin to hoard supplies in fear of the future.  
+During the 1918 Spanish Flu, wine and other forms of liquor were considered to have medicinal properties that could combat the Influenza [@jones1963prohibition] -- and with effective forms of propaganda, liquor (beer and spirits like whiskey) and wine sales, combined exceeded a ratio of 1.5 in sales per capita (ref. Figure \ \@ref(fig:second-plot)).  Contrary to the popular belief in 1918, that liquor can be used to combat a the pathogens casing a pandemic, a study published in 2021 discussed the potential effects of increased alcohol consumption being correlated with vulnerability to SARS-CoV-2 [@calina2021covid]. While trends in alcohol consumption during the 2020 pandemic were similar to that of 1918, liquor sales (in wine and spirits) per capita had started creeping up well before the COVID-19 pandemic had started -- by the end of 2016, total alcohol sales per capita reached 2.35. While this value shys in comparison to a total of 3.05 per capita alcohol consumption that 1918-19 upholds (just before Prohibition was enforced), the increase in alcohol consumption is synonymous to that in the last century.  
+Prohibition resulted in a 62% reduction in total per capita consumption of liquor (i.e., from an all-time total maximum of 2.56 seen in 1915 to an all-time minimum 0.97 seen in 1934). Fitting a linear model to the data on alcohol consumption per capita, helps in predicting the per capita values up until 2040 for beer, wine, and spirits (e.g., whiskey, rum, gin, etc.), as seen in Table \ \@ref(tab:pred-table) and Figure \ \@ref(fig:prediction-plot). By the end of 2040, total liquor consumption per capita (i.e., beer, wine, and spirits combined) will reach a level of 2.84 and by the end of next year (2023), per capita values of alcohol consumption will reach 2.55. This value is 0.6 units above the per capita consumption from 1919, right before Prohibition was enforced. If another Prohibition is enforced, ceteris paribus, we can expect to see a reduction of approximately 60% to a total per capita consumption of 1.02 (i.e., if another Prohibition is enforced at the end of 2023) or 1.14 (i.e., if another restrictive legislation is enforced at the end of 2040). These numbers fall just above those seen in 1934 records of alcohol consumption. Hence, any legislation that can help decrease in the currently heightened levels of alcohol consumption can help the nation turn to more healthy coping mechanisms during a national crisis -- whether that be a pandemic, a war, or the results of an election (@monnat2016deaths).  
+Economic crises, such as those presented by both pandemics, have been proven to have some correlation with alcohol use (@de2015economic). More specifically, an increase in psychological distress, caused by financial difficulties, isolation, and uncertainty caused by the news of a pandemic can aggravate alcohol [ab]use (@rehm2020alcohol). While a decrease in income (due to unemployment or reduced working hours) might lead to the prediction that alcohol consumption would decrease due to a decrease in budget (@petrosky2020unemployment; @rehm2020alcohol), this prediction would rely on the assumption that alcohol is a normal good i.e., a good that experiences an increase in demand when income increases. However, certain alcoholic beverages (namely beer) are considered to be inferior goods i.e., a good that experiences an increase in demand when income decreases (@tremblay2005us). Assigning alcohol as an inferior good aligns with the predictions conducted in this report as financial distress would not necessarily reduce alcohol consumption -- instead, consumers would turn to alcoholic beverages to help cope with the distress.  
+The predicted values of alcohol consumption suggest the necessity to control consumption levels to prevent the tendency of affected individuals to turn to alcohol as self-medication, which would only exacerbate disease and mortality rates. In fact, heavy drinking, as is suggested by the current sales in alcohol (ref. Figure \ \@ref(fig:initial-plot) has the potential of being associated with weakened immune systems that would not be able to fight against pathogens like that of coronavirus (@molina2010focus).
+
+# Discussion
+With current per capita consumption of alcohol approximating to a value just shy of what the world saw in 1919, before the Prohibition, it is important to consider the numbers from around the time of the most recent pandemic and determine the possibility of the per capita value increasing to beyond that seen during the 1918 pandemic by the end of the next decade. In fact, based on a simple linear regression, the total per capita consumption of liquor could reach 2.54, approximately a quarter of a unit higher than that in 1919 [@miron1991alcohol]. According to a correlation test between grocery sales and alcohol sales (where the relationship between the two were significantly correlated), any future spike in grocery sales (caused by another world event that induces panic) could push alcohol sales to unparalleled values. While there is no evidence that U.S. residents still consider alcohol to have medicinal properties, retail sales in alcohol surpassed that of pharmaceutical sales indicating that they deemed alcohol to be slightly more important than medication and slightly less than groceries. Without any legislation on alcohol consumption in the near future, alcohol consumption could reach higher values than that seen right after the last pandemic. Hence, another restrictive legislation, like that demonstrated by the Prohibition, could lead to a notable reduction in liquor consumption -- almost similar to the reduction seen by the steep decline in consumption in 1933, from apex seen in 1919.
+
+\newpage
+
+# References
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+<div id="refs" custom-style="Bibliography"></div>
+\endgroup
