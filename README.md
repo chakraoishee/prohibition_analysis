@@ -37,11 +37,15 @@ I used advanced data structures and using tidyverse in R to analyze my datasets.
 why. (4 points)  
 Given more time, I would search for more data on grocery sales and pharmaceuticals, from other countries (where alcohol consumption levels are of concern), to predict their future alcohol consumption and determine whether they should enforce some controlling legislation.  
 
-5. How to run your project. If your project requires a dataset, please include it if possible.
-Note that sometimes, you can’t share datasets. That’s fine as long as you can
-demonstrate the project’s functionality, perhaps with mocked-up data. (4 points)
+5. How to run your project. If your project requires a dataset, please include it if possible. Note that sometimes, you can’t share datasets. That’s fine as long as you can demonstrate the project’s functionality, perhaps with mocked-up data. (4 points). 
+As mentioned in the Datasets section, this project was based on retail sales and per capita ethanol consumption data. Any data analysis and data preparation can be found in the .Rmd file.  
+
 6. Was the project challenging in the way you expected? What did you overcome? (4
-points)
-7. Cited sources, appropriate acknowledgements. Explain how each source applied to your
-project. (5 points)
-8. If you attempted the extra credit, explain how you successfully met the criteria.
+points)  
+This project helped me test my limits with data visualization. My primary use of data visualization relied on base R prior to this project--during this project, I used ggplot2 to bring my data to life with figuress.  
+
+7. Cited sources, appropriate acknowledgements. Explain how each source applied to your project. (5 points)  
+Please refer to the .bib file that contains all of my reference material.  
+
+8. If you attempted the extra credit, explain how you successfully met the criteria.  
+I attempted to do the extra credit by using different and new libraries that I had never encountered before including jTools, stargazer, broom, forecast, and janitor to help with my data analysis.  
