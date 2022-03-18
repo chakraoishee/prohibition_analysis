@@ -18,3 +18,30 @@ The primary dependent variable is year (ranging from 1850 to 2021 across all dat
  - [X] Analyze per capita trends and predict what the liquor consumption will look like in this next decade (2020 - 2040)
    - [X] Present a table with predicted per capita values
  - [X] Discuss how Prohibition helped reduce consumption levels and how a new preventive Prohibition can do the same  
+
+**Project Questions and Answers**  
+1. Describe the project. Don’t worry if you end up changing your idea, that’s fine as long as
+you tell us what you are doing. (4 points)  
+With the use of data on retail sales of alcoholic beverages, I wish to research whether the United States is in for another "Prohibition." Prohibition in the United States was a constitutional ban on the production, importation, transportation, and sale of alcoholic beverages from 1920 to 1933, across the nation. The constitutional ban was enforced due to an alarming rise in the faith of alcohol and its benefits against influenza. Although the average alcohol consumption every year fell just before the Prohibition, consumption rebounded to pre-Prohibition levels within 10 years of being repealed. I hypothesize that with the dawn of a new pandemic (from 2020 - 21), alcohol consumption has reached, and exceeded the levels recorded during the influenza pandemic (1918 - 19), calling for a new, revised, and more successful Prohibition Act.  
+During my research I will be combining the datasets from the FRED, NIH (Alcohol Abuse and Alcoholism), and Statista to analyze the similarities in alcohol consumption in 1918 - 19 and 2020 - 21. By the end of this research project, I will predict how alcohol consumption may change in the near future, without any intervention.  
+
+2. Explain in a few sentences why you selected this project, and if you learned what you
+had hoped to learn by doing this project (from your proposal). (4 points)  
+Upon recently learning about the history of Prohibition and reading about the detrimental effects that alcohol has on an individual, especially in the midst of a pandemic, I was curious to learn if there was any trend in alcohol consumption during the COVID-19 pandemic and whether a similar trend was seen in the previous (Influenza) pandemic.  
+
+3. Describe the two major class themes selected (any concept from any lecture is fair
+game!), why you selected them, and how they are applied in the project. (5 points)  
+I used advanced data structures and using tidyverse in R to analyze my datasets.  
+
+4. What you would do differently if you were to have an opportunity to redo this project and
+why. (4 points)  
+Given more time, I would search for more data on grocery sales and pharmaceuticals, from other countries (where alcohol consumption levels are of concern), to predict their future alcohol consumption and determine whether they should enforce some controlling legislation.  
+
+5. How to run your project. If your project requires a dataset, please include it if possible.
+Note that sometimes, you can’t share datasets. That’s fine as long as you can
+demonstrate the project’s functionality, perhaps with mocked-up data. (4 points)
+6. Was the project challenging in the way you expected? What did you overcome? (4
+points)
+7. Cited sources, appropriate acknowledgements. Explain how each source applied to your
+project. (5 points)
+8. If you attempted the extra credit, explain how you successfully met the criteria.
