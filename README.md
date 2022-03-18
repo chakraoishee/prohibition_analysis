@@ -45,7 +45,7 @@ points)
 This project helped me test my limits with data visualization. My primary use of data visualization relied on base R prior to this project--during this project, I used ggplot2 to bring my data to life with figuress.  
 
 7. Cited sources, appropriate acknowledgements. Explain how each source applied to your project. (5 points)  
-Please refer to the .bib file that contains all of my reference material.  
+Please refer to the .bib file that contains all of my reference material that was used for this project (also refer to in-text citations).  
 
 8. If you attempted the extra credit, explain how you successfully met the criteria.  
 I attempted to do the extra credit by using different and new libraries that I had never encountered before including jTools, stargazer, broom, forecast, and janitor to help with my data analysis.  
